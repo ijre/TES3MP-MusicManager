@@ -1,0 +1,22 @@
+name: Create MusicManager Release
+on:
+  release:
+    types: [ published ]
+
+jobs:
+  upload:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Make Archive
+      run: ./.github/7za.exe -t7z a "./MusicManager.7z" "./MusicManager/"
+      shell: powershell
+    - name: Upload Archive to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./MusicManager.7z
+        asset_name: MusicManager.7z
+        asset_content_type: application/zip
