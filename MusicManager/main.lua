@@ -1,12 +1,12 @@
 MusicManager =
 {
-  CachedFiles = { },
   Config =
   {
     PathToMusic = nil
     -- REPLACE "PathToMusic" WITH AN ABSOLUTE PATH TO FOLDER CONTAINING YOUR MUSIC, MUST CONTAIN TRAILING SLASH
       -- FOLDER MUST STILL BE LOCATED IN MORROWIND'S "Data Files/Music/"
-  }
+  },
+  CachedFiles = { }
 }
 
 local function GetCaseInsensTableKey(tbl, strToFind)
