@@ -119,7 +119,7 @@ end
 
 local cmdList =
 {
-  "playtracks",
+  "playtrack",
   "listtracks",
   "reloadtracks"
 }
