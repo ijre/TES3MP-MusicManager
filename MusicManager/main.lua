@@ -3,7 +3,7 @@ MusicManager =
   Config =
   {
     PathToMusic = nil
-    -- REPLACE "PathToMusic" WITH AN ABSOLUTE PATH TO FOLDER CONTAINING YOUR MUSIC, MUST CONTAIN TRAILING SLASH
+    -- REPLACE "PathToMusic" WITH AN ABSOLUTE PATH TO FOLDER CONTAINING YOUR MUSIC
       -- FOLDER MUST STILL BE LOCATED IN MORROWIND'S "Data Files/Music/"
   },
   CachedFiles = { }
@@ -41,6 +41,12 @@ function MusicManager:PopulateCache(pid)
     -- Morrowind only loads in custom files once, so we should do the same to avoid perceived false negatives
       -- caused by songs showing up during `/listtracks` that won't play if added during a session
     return true
+  end
+
+  local lastSlash = string.find(self.Config.PathToMusic, "[/\\]", -1)
+
+  if not lastSlash then
+    self.Config.PathToMusic = self.Config.PathToMusic .. "/"
   end
 
   for file in io.popen(string.format([[dir "%s" /b]], self.Config.PathToMusic)):lines() do
