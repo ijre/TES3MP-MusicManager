@@ -89,9 +89,7 @@ function MusicManager.PlayTrack(pid, cmd)
   logicHandler.RunConsoleCommandOnPlayer(pid, string.format("StreamMusic \"%s%s.%s\"", MusicManager.Config.PathToMusicRelative, name, ext))
 end
 
-customCommandHooks.registerCommand("playtrack", MusicManager.PlayTrack)
-customCommandHooks.registerCommand("listtracks",
-function(pid)
+function MusicManager.ListTracks(pid)
   if not MusicManager:PopulateCache(pid) then
     return
   end
@@ -99,4 +97,27 @@ function(pid)
   for key in pairs(MusicManager.CachedFiles) do
     PrintToChat(pid, tostring(key))
   end
-end)
+end
+
+local cmdList =
+{
+  "playtracks",
+  "listtracks"
+}
+
+local origProcess = commandHandler.ProcessCommand
+function commandHandler.ProcessCommand(pid, cmd)
+  if tableHelper.containsCaseInsensitiveString(cmdList, cmd[1]) then
+    local newCmd = cmd
+    newCmd[1] = newCmd[1]:lower()
+
+    customCommandHooks.getCallback(newCmd[1]:lower())(pid, newCmd)
+
+    return customEventHooks.makeEventStatus(false, nil)
+  end
+
+  return origProcess(pid, cmd)
+end
+
+customCommandHooks.registerCommand("playtrack", MusicManager.PlayTrack)
+customCommandHooks.registerCommand("listtracks", MusicManager.ListTracks)
