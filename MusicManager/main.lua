@@ -21,9 +21,11 @@ local function GetCaseInsensTableKey(tbl, strToFind)
   return nil
 end
 
-local function PrintToChat(pid, msg, isErr, toAll)
-  local colour = isErr and color.Red or ""
-  tes3mp.SendMessage(pid, string.format("%s[MusicManager]: %s\n", colour, msg), toAll)
+local function PrintToChat(pid, msg, isErr, toAll, beforeMsg)
+  local colour = isErr and color.Red or color.GreenText
+  beforeMsg = beforeMsg and true or ""
+
+  tes3mp.SendMessage(pid, string.format("%s%s[MusicManager]: %s\n", beforeMsg, colour, msg), toAll)
 end
 
 function MusicManager:PopulateCache(pid)
@@ -99,10 +101,21 @@ function MusicManager.ListTracks(pid)
   end
 end
 
+function MusicManager.ReloadTracks(pid, cmd)
+  MusicManager.CachedFiles = { }
+
+  MusicManager:PopulateCache(pid)
+
+  PrintToChat(pid, string.format(
+    "Tracks reloaded!\n%sPlease note: OpenMW only loads its data files between restarts; "
+    .. "this command is only so that the server's list is up to date.", color.Warning), false, true, "\n")
+end
+
 local cmdList =
 {
   "playtracks",
-  "listtracks"
+  "listtracks",
+  "reloadtracks"
 }
 
 local origProcess = commandHandler.ProcessCommand
@@ -121,3 +134,4 @@ end
 
 customCommandHooks.registerCommand("playtrack", MusicManager.PlayTrack)
 customCommandHooks.registerCommand("listtracks", MusicManager.ListTracks)
+customCommandHooks.registerCommand("reloadtracks", MusicManager.ReloadTracks)
