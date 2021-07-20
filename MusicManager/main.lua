@@ -9,28 +9,12 @@ MusicManager =
   CachedFiles = { }
 }
 
-local function GetCaseInsensTableKey(tbl, strToFind)
-  for key in pairs(tbl) do
-    local keyStr = tostring(key)
-
-    if keyStr:lower() == strToFind:lower() then
-      return keyStr
-    end
-  end
-
-  return nil
-end
-
-local function PrintToChat(pid, msg, isErr, toAll, beforeMsg)
-  local colour = isErr and color.Red or color.GreenText
-  beforeMsg = beforeMsg and true or ""
-
-  tes3mp.SendMessage(pid, string.format("%s%s[MusicManager]: %s\n", beforeMsg, colour, msg), toAll)
-end
+local Helpers = require("custom/MusicManager/helpers")
+-- local Helpers = require("custom/MM/MusicManager/helpers")
 
 function MusicManager:PopulateCache(pid)
   if self.Config.PathToMusic == nil then
-    PrintToChat(pid,
+    self:PrintToChat(pid,
     "Script is configured incorrectly, and does not feature a path to the custom tracks where it should have one."
     .."\nFixing this will require editing the script file directly, as well as a server restart after.", true)
 
@@ -65,7 +49,7 @@ function MusicManager:PopulateCache(pid)
         err = "File name has more than one period, and no I cannot be fucked to reconstruct the entire goddamn array to fix the name do you have any idea how anno"
       end
 
-      PrintToChat(pid, string.format("Error when caching \"%s\", reason: \"%s\"", file, err), true, true)
+      self.Helpers:PrintToChat(pid, string.format("Error when caching \"%s\", reason: \"%s\"", file, err), true, true)
     else
       self.CachedFiles[name] = { Ext = ext }
     end
@@ -85,10 +69,10 @@ function MusicManager.PlayTrack(pid, cmd)
 
   local requestedTrack = tableHelper.concatenateFromIndex(cmd, 2)
 
-  local name = GetCaseInsensTableKey(MusicManager.CachedFiles, requestedTrack)
+  local name = Helpers:GetCaseInsensTableKey(MusicManager.CachedFiles, requestedTrack)
 
   if not name then
-    PrintToChat(pid, "Song not found.", true)
+    Helpers:PrintToChat(pid, "Song not found.", true)
     return
   end
 
@@ -103,7 +87,7 @@ function MusicManager.ListTracks(pid)
   end
 
   for key in pairs(MusicManager.CachedFiles) do
-    PrintToChat(pid, tostring(key))
+    Helpers:PrintToChat(pid, tostring(key))
   end
 end
 
@@ -112,7 +96,7 @@ function MusicManager.ReloadTracks(pid, cmd)
 
   MusicManager:PopulateCache(pid)
 
-  PrintToChat(pid, string.format(
+  Helpers:PrintToChat(pid, string.format(
     "Tracks reloaded!\n%sPlease note: OpenMW only loads its data files between restarts; "
     .. "this command is only so that the server's list is up to date.", color.Warning), false, true, "\n")
 end
