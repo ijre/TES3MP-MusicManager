@@ -1,7 +1,7 @@
 local Helpers =
 {
-  PathToSelf = "server/scripts/custom/MusicManager"
-  -- PathToSelf = "server/scripts/custom/MM/MusicManager"
+  PathToSelf = "server\\scripts\\custom\\MusicManager"
+  -- PathToSelf = "server\\scripts\\custom\\MM\\MusicManager"
 }
 
 function Helpers:GetCaseInsensTableKey(tbl, strToFind)
@@ -55,7 +55,7 @@ function Helpers:GetRandomTrack()
 end
 
 function Helpers:GetSongLength(pid, fileName)
-  local rawStr = io.popen(string.format([[powershell "& './%s/getFileParams.ps1' '%s' '%s'"]], self.PathToSelf, MusicManager.Config.PathToMusic, fileName)):read()
+  local rawStr = io.popen(string.format([[%s\GetFileProps\GetFileProperties.exe "%s%s"]], self.PathToSelf, MusicManager.Config.PathToMusic, fileName)):read()
   -- format is HH:MM:SS
 
   local timeSplit = rawStr:split(":")

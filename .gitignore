@@ -1,0 +1,10 @@
+.vs
+build
+obj
+*.vcxproj.*
+*.user
+.editorconfig
+*DotSettings*
+packages/
+
+# MusicManager/GetFileProps
