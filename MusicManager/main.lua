@@ -86,8 +86,16 @@ function MusicManager.ListTracks(pid)
     return
   end
 
+  local keyList = { }
+
   for key in pairs(MusicManager.CachedFiles) do
-    Helpers:PrintToChat(pid, tostring(key))
+    table.insert(keyList, key)
+  end
+
+  table.sort(keyList)
+
+  for _, key in ipairs(keyList) do
+    Helpers:PrintToChat(pid, key)
   end
 end
 
