@@ -8,7 +8,17 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@master
+    - name: Find MSBuild
+      uses: microsoft/setup-msbuild@v1.0.2
+    - name: Use MSBuild
+      run: |
+        mkdir "MusicManager/GetFileProps"
+        MSBuild.exe -r -p:Configuration=Release;RestorePackagesConfig=True "./GetFileProperties/GetFileProperties.sln"
+      shell: cmd
+
     - name: Make Archive
+      if: ${{ success() }}
+
       run: ./.github/7za.exe -t7z a "./MusicManager.7z" "./MusicManager/"
       shell: powershell
     - name: Upload Archive to Release
