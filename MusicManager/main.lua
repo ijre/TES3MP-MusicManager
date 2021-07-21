@@ -139,8 +139,10 @@ function MusicManager.RadioStart(pid, cmd)
 end
 
 function MusicManager.RadioStop(pid)
-  tes3mp.StopTimer(MusicManager.RadioTimer)
-  MusicManager.RadioTimer = nil
+  if MusicManager.RadioTimer then
+    tes3mp.StopTimer(MusicManager.RadioTimer)
+    MusicManager.RadioTimer = nil
+  end
 end
 
 function MusicManager.ListTracks(pid)

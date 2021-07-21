@@ -18,7 +18,7 @@ end
 
 function Helpers:PrintToChat(pid, msg, isErr, toAll, beforeMsg)
   local colour = isErr and color.Red or color.GreenText
-  beforeMsg = beforeMsg and true or ""
+  beforeMsg = beforeMsg and beforeMsg or ""
 
   tes3mp.SendMessage(pid, string.format("%s%s[MusicManager]: %s\n", beforeMsg, colour, msg), toAll)
 end
