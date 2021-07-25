@@ -69,4 +69,78 @@ function Helpers:GetSongLength(pid, fileName)
   return convertedHours + convertedMinutes + convertedSeconds
 end
 
+function Helpers:GetSongCount()
+  local count = 0
+
+  for _ in io.popen(string.format([[dir "%s" /b]], MusicManager.Config.PathToMusic)):lines() do
+    count = count + 1
+  end
+
+  return count
+end
+
+function Helpers:UpdateCache(pid)
+  local ret = { }
+
+  self:PrintToChat(pid, "Updating song cache, this may take a while!", false, true, "\n")
+
+  for file in io.popen(string.format([[dir "%s" /b]], MusicManager.Config.PathToMusic)):lines() do
+    local fileSplit = file:split(".")
+    local name = fileSplit[1]
+    local ext = fileSplit[2]
+
+    local validExts =
+    {
+      "mp3",
+      "wav",
+      "mdi"
+    }
+
+    if not tableHelper.containsCaseInsensitiveString(validExts, ext) then
+      goto continue end
+
+    local splitCount = tableHelper.getCount(fileSplit)
+
+    if splitCount ~= 2 then
+      local err = ""
+
+      if splitCount == 1 then
+        err = "File name is missing an extension."
+      elseif splitCount > 2 then
+        err = "File name has more than one period, and no I cannot be fucked to reconstruct the entire goddamn array to fix the name do you have any idea how anno"
+      end
+
+      self:PrintToChat(pid, string.format("Error when caching \"%s\", reason: \"%s\"", file, err), true, true)
+    else
+      local leng = -1
+
+      if not file:find("\'") then
+        leng = self:GetSongLength(pid, file)
+      else
+        local newFile = string.gsub(file, "\'", "`")
+
+        local function renameCMD(oldName, newName)
+          return string.format([[move "%s%s" "%s%s"]], MusicManager.Config.PathToMusic, oldName, MusicManager.Config.PathToMusic, newName)
+        end
+
+        io.popen(renameCMD(file, newFile))
+
+        leng = self:GetSongLength(pid, newFile)
+
+        io.popen(renameCMD(newFile, file))
+      end
+
+      ret[name] =
+      {
+        Ext = ext,
+        Length = leng
+      }
+    end
+
+    ::continue::
+  end
+
+  return ret
+end
+
 return Helpers

@@ -31,7 +31,7 @@ end
 local Helpers = SetupHelpers()
 MusicManager.Helpers = Helpers
 
-function MusicManager:PopulateCache(pid)
+function MusicManager:PopulateCache(pid, forceUpdate)
   if self.Config.PathToMusic == nil then
     self.Helpers:PrintToChat(pid,
     "Script is configured incorrectly, and does not feature a path to the custom tracks where it should have one."
@@ -52,61 +52,22 @@ function MusicManager:PopulateCache(pid)
   self.Config["PathToMusicRelative"] = self.Config.PathToMusic:sub(relativePathInd + 8)
     -- 8 is length of "/Music/" plus 1 to bypass the last slash, using its length to avoid issues with searching for / versus \
 
-  for file in io.popen(string.format([[dir "%s" /b]], self.Config.PathToMusic)):lines() do
-    local fileSplit = file:split(".")
-    local name = fileSplit[1]
-    local ext = fileSplit[2]
+  local jsonPath = "custom/MusicManager_Cache.json"
 
-    local validExts =
-    {
-      "mp3",
-      "wav",
-      "mdi"
-    }
+  local cache = jsonInterface.load(jsonPath)
+  local cacheSize = 0
+  local currentFilesCount = self.Helpers:GetSongCount()
 
-    if not tableHelper.containsCaseInsensitiveString(validExts, ext) then
-      goto continue end
-
-    local splitCount = tableHelper.getCount(fileSplit)
-
-    if splitCount ~= 2 then
-      local err = ""
-
-      if splitCount == 1 then
-        err = "File name is missing an extension."
-      elseif splitCount > 2 then
-        err = "File name has more than one period, and no I cannot be fucked to reconstruct the entire goddamn array to fix the name do you have any idea how anno"
-      end
-
-      self.Helpers:PrintToChat(pid, string.format("Error when caching \"%s\", reason: \"%s\"", file, err), true, true)
-    else
-      local leng = -1
-
-      if not file:find("\'") then
-        leng = self.Helpers:GetSongLength(pid, file)
-      else
-        local newFile = string.gsub(file, "\'", "`")
-
-        local function renameCMD(oldName, newName)
-          return string.format([[move "%s%s" "%s%s"]], self.Config.PathToMusic, oldName, self.Config.PathToMusic, newName)
-        end
-
-        io.popen(renameCMD(file, newFile))
-
-        leng = self.Helpers:GetSongLength(pid, newFile)
-
-        io.popen(renameCMD(newFile, file))
-      end
-
-      self.CachedFiles[name] =
-      {
-        Ext = ext,
-        Length = leng
-      }
-    end
-
-    ::continue::
+  if cache then
+    cacheSize = tableHelper.getCount(cache)
   end
+
+  if forceUpdate or not cache or cacheSize ~= currentFilesCount then
+    cache = self.Helpers:UpdateCache(pid)
+    jsonInterface.quicksave(jsonPath, cache)
+  end
+
+  self.CachedFiles = cache
 
   return true
 end
@@ -177,7 +138,7 @@ end
 function MusicManager.ReloadTracks(pid, cmd)
   MusicManager.CachedFiles = { }
 
-  MusicManager:PopulateCache(pid)
+  MusicManager:PopulateCache(pid, true)
 
   Helpers:PrintToChat(pid, string.format(
     "Tracks reloaded!\n%sPlease note: OpenMW only loads its data files between restarts; "
