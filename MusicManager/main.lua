@@ -71,10 +71,9 @@ function MusicManager:PopulateCache(pid)
       else
         local newFile = string.gsub(file, "\'", "`")
 
-        local renameCMD =
-          function(oldName, newName)
-            return string.format([[move "%s%s" "%s%s"]], self.Config.PathToMusic, oldName, self.Config.PathToMusic, newName)
-          end
+        local function renameCMD(oldName, newName)
+          return string.format([[move "%s%s" "%s%s"]], self.Config.PathToMusic, oldName, self.Config.PathToMusic, newName)
+        end
 
         io.popen(renameCMD(file, newFile))
 
