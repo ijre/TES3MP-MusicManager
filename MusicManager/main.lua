@@ -55,14 +55,12 @@ function MusicManager:PopulateCache(pid, forceUpdate)
   local jsonPath = "custom/MusicManager_Cache.json"
 
   local cache = jsonInterface.load(jsonPath)
-  local cacheSize = 0
-  local currentFilesCount = self.Helpers:GetSongCount()
 
   if cache then
-    cacheSize = tableHelper.getCount(cache)
+    forceUpdate = forceUpdate == true or self.Helpers:ShouldVerifyCache(cache)
   end
 
-  if forceUpdate or not cache or cacheSize ~= currentFilesCount then
+  if forceUpdate or not cache then
     cache = self.Helpers:UpdateCache(pid)
     jsonInterface.quicksave(jsonPath, cache)
   end

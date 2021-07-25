@@ -69,14 +69,39 @@ function Helpers:GetSongLength(pid, fileName)
   return convertedHours + convertedMinutes + convertedSeconds
 end
 
-function Helpers:GetSongCount()
+function Helpers:ShouldVerifyCache(cache)
   local count = 0
+  local cacheSize = tableHelper.getCount(cache)
 
-  for _ in io.popen(string.format([[dir "%s" /b]], MusicManager.Config.PathToMusic)):lines() do
+  for file in io.popen(string.format([[dir "%s" /b]], MusicManager.Config.PathToMusic)):lines() do
+    local fileSplit = file:split(".")
+    local name = fileSplit[1]
+    local ext = fileSplit[2]
+
+    local validExts =
+    {
+      "mp3",
+      "wav",
+      "mdi"
+    }
+
+    if not tableHelper.containsCaseInsensitiveString(validExts, ext) then
+      goto continue end
+
+    if not cache[name] then
+      return true
+    end
+
     count = count + 1
+
+    ::continue::
   end
 
-  return count
+  if count ~= cacheSize then
+    return true
+  end
+
+  return false
 end
 
 function Helpers:UpdateCache(pid)
