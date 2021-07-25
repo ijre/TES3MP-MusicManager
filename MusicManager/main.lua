@@ -135,7 +135,7 @@ function MusicManager.Loop(pid)
     state = "disabled"
   end
 
-  Helpers:PrintToChat(pid, string.format("Looping %s!"), state, true)
+  Helpers:PrintToChat(pid, string.format("Looping %s!", state), false, true)
 end
 
 function MusicManager.ListTracks(pid)
