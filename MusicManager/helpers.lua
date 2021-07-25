@@ -220,4 +220,22 @@ function Helpers:PlayNewSong(pid, song, playingType)
   logicHandler.RunConsoleCommandOnPlayer(pid, string.format("StreamMusic \"%s%s.%s\"", MusicManager.Config.PathToMusicRelative, song, data.Ext))
 end
 
+function Helpers:FindCloseTracks(pid, cmd)
+  tableHelper.removeValue(cmd, cmd[1])
+  local trackNames = self:GetSortedSongList()
+  local trackMatches = { }
+
+  for _, track in pairs(trackNames) do
+    for _, word in pairs(cmd) do
+      if string.find(track:lower(), word:lower(), 1, true) then
+        table.insert(trackMatches, track)
+        break
+      end
+    end
+  end
+
+  local matchStr = "\n- " .. tableHelper.concatenateFromIndex(trackMatches, 1, "\n- ")
+  self:PrintToChat(pid, "Could not find song, did you mean one of these? " .. matchStr)
+end
+
 return Helpers

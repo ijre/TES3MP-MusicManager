@@ -86,7 +86,7 @@ function MusicManager.PlayTrack(pid, cmd)
   local name = Helpers:GetCaseInsensTableKey(MusicManager.CachedFiles, requestedTrack)
 
   if not name then
-    Helpers:PrintToChat(pid, "Song not found.", true)
+    Helpers:FindCloseTracks(pid, cmd)
     return
   end
 
