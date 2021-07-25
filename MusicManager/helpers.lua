@@ -1,8 +1,4 @@
-local Helpers =
-{
-  PathToSelf = "server\\scripts\\custom\\MusicManager"
-  -- PathToSelf = "server\\scripts\\custom\\MM\\MusicManager"
-}
+local Helpers = { }
 
 function Helpers:GetCaseInsensTableKey(tbl, strToFind)
   for key in pairs(tbl) do
@@ -55,7 +51,7 @@ function Helpers:GetRandomTrack()
 end
 
 function Helpers:GetSongLength(pid, fileName)
-  local rawStr = io.popen(string.format([[%s\GetFileProps\GetFileProperties.exe "%s%s"]], self.PathToSelf, MusicManager.Config.PathToMusic, fileName)):read()
+  local rawStr = io.popen(string.format([[%s\GetFileProps\GetFileProperties.exe "%s%s"]], MusicManager.Config.PathToSelfScripts, MusicManager.Config.PathToMusic, fileName)):read()
   -- format is HH:MM:SS
 
   local timeSplit = rawStr:split(":")

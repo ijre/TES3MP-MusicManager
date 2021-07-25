@@ -11,8 +11,24 @@ MusicManager =
   CachedFiles = { }
 }
 
-local Helpers = require("custom/MusicManager/helpers")
--- local Helpers = require("custom/MM/MusicManager/helpers")
+local function SetupHelpers()
+  local valid, ret = pcall(function()
+    MusicManager.Config.PathToSelfScripts = "server\\scripts\\custom\\MusicManager"
+    return require("custom/MusicManager/helpers")
+  end)
+
+  if not valid then
+    MusicManager.Config.PathToSelfScripts = "server\\scripts\\custom\\MM\\MusicManager"
+    ret = require("custom/MM/MusicManager/helpers")
+    MusicManager.Config.PathToMusic = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Morrowind\\Data Files\\Music\\Custom"
+  end
+
+  MusicManager.Config.PathToSelfData = "server\\data\\custom"
+
+  return ret
+end
+
+local Helpers = SetupHelpers()
 MusicManager.Helpers = Helpers
 
 function MusicManager:PopulateCache(pid)
