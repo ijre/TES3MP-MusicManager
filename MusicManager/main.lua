@@ -99,7 +99,7 @@ function MusicManager.PlayTrack(pid, cmd)
   Helpers:PlayNewSong(pid, name, type)
 end
 
-function MusicManager.RadioStart(pid, cmd)
+function MusicManager.RadioStart(pid)
   if not MusicManager:PopulateCache(pid) then
     return
   end
@@ -150,7 +150,7 @@ function MusicManager.ListTracks(pid)
   end
 end
 
-function MusicManager.ReloadTracks(pid, cmd)
+function MusicManager.ReloadTracks(pid)
   MusicManager.CachedFiles = { }
 
   MusicManager:PopulateCache(pid, true)
