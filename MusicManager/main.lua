@@ -110,8 +110,6 @@ function MusicManager.PlayTrack(pid, cmd)
     return
   end
 
-  -- Helpers:PrintToChat(pid, MusicManager.CachedFiles[name].Length)
-
   local ext = MusicManager.CachedFiles[name].Ext
 
   logicHandler.RunConsoleCommandOnPlayer(pid, string.format("StreamMusic \"%s%s.%s\"", MusicManager.Config.PathToMusicRelative, name, ext))
@@ -133,6 +131,10 @@ function MusicManager.RadioStart(pid, cmd)
   local randTrack, randTrackData = Helpers:GetRandomTrack()
 
   MusicManager.PlayTrack(pid, { " ", randTrack })
+
+  if MusicManager.RadioTimer then
+    tes3mp.StopTimer(MusicManager.RadioTimer)
+  end
 
   MusicManager.RadioTimer = tes3mp.CreateTimerEx("ContinueRadio", randTrackData.Length, "i", pid)
   tes3mp.StartTimer(MusicManager.RadioTimer)
