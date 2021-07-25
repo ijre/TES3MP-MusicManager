@@ -77,6 +77,11 @@ function MusicManager.PlayTrack(pid, cmd)
 
   local requestedTrack = tableHelper.concatenateFromIndex(cmd, 2)
 
+  if requestedTrack == "" then
+    MusicManager.ListTracks(pid)
+    return
+  end
+
   local name = Helpers:GetCaseInsensTableKey(MusicManager.CachedFiles, requestedTrack)
 
   if not name then
