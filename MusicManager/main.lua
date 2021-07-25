@@ -30,6 +30,7 @@ end
 
 local Helpers = SetupHelpers()
 MusicManager.Helpers = Helpers
+MusicManager.CurrentSongType = Helpers.MusicTypes.Stop
 
 function MusicManager:PopulateCache(pid, forceUpdate)
   if self.Config.PathToMusic == nil then
@@ -89,17 +90,13 @@ function MusicManager.PlayTrack(pid, cmd)
     return
   end
 
-  local ext = MusicManager.CachedFiles[name].Ext
+  local type = Helpers.MusicTypes.OnDemand
 
-  logicHandler.RunConsoleCommandOnPlayer(pid, string.format("StreamMusic \"%s%s.%s\"", MusicManager.Config.PathToMusicRelative, name, ext))
-end
+  if MusicManager.CurrentSongType == Helpers.MusicTypes.Radio then
+    type = Helpers.MusicTypes.OnDemandDuringRadio
+  end
 
-function ContinueRadio(pid)
-  local randTrack, randTrackData = Helpers:GetRandomTrack()
-
-  MusicManager.PlayTrack(pid, { " ", randTrack })
-
-  tes3mp.RestartTimer(MusicManager.RadioTimer, randTrackData.Length)
+  Helpers:PlayNewSong(pid, name, type)
 end
 
 function MusicManager.RadioStart(pid, cmd)
@@ -107,23 +104,38 @@ function MusicManager.RadioStart(pid, cmd)
     return
   end
 
-  local randTrack, randTrackData = Helpers:GetRandomTrack()
+  local randTrack = Helpers:GetRandomTrack()
 
-  MusicManager.PlayTrack(pid, { " ", randTrack })
-
-  if MusicManager.RadioTimer then
-    tes3mp.StopTimer(MusicManager.RadioTimer)
-  end
-
-  MusicManager.RadioTimer = tes3mp.CreateTimerEx("ContinueRadio", randTrackData.Length, "i", pid)
-  tes3mp.StartTimer(MusicManager.RadioTimer)
+  Helpers:PlayNewSong(pid, randTrack, Helpers.MusicTypes.Radio)
 end
 
 function MusicManager.RadioStop(pid)
-  if MusicManager.RadioTimer then
-    tes3mp.StopTimer(MusicManager.RadioTimer)
-    MusicManager.RadioTimer = nil
+  Helpers:PlayNewSong(pid, _, Helpers.MusicTypes.Stop)
+  MusicManager.RadioTimer = nil
+end
+
+local songTypeBeforeLoop = nil
+
+function MusicManager.Loop(pid)
+  if MusicManager.CurrentSongType == Helpers.MusicTypes.Stop then
+    return
   end
+
+  local state = ""
+
+  if MusicManager.CurrentSongType ~= Helpers.MusicTypes.Loop then
+    songTypeBeforeLoop = MusicManager.CurrentSongType
+    MusicManager.CurrentSongType = Helpers.MusicTypes.Loop
+
+    state = "enabled"
+  else
+    MusicManager.CurrentSongType = songTypeBeforeLoop
+    songTypeBeforeLoop = nil
+
+    state = "disabled"
+  end
+
+  Helpers:PrintToChat(pid, string.format("Looping %s!"), state, true)
 end
 
 function MusicManager.ListTracks(pid)
@@ -153,6 +165,7 @@ local cmdList =
   "playtrack",
   "radiostart",
   "radiostop",
+  "loop",
   "listtracks",
   "reloadtracks"
 }
@@ -174,5 +187,6 @@ end
 customCommandHooks.registerCommand("playtrack", MusicManager.PlayTrack)
 customCommandHooks.registerCommand("radiostart", MusicManager.RadioStart)
 customCommandHooks.registerCommand("radiostop", MusicManager.RadioStop)
+customCommandHooks.registerCommand("loop", MusicManager.Loop)
 customCommandHooks.registerCommand("listtracks", MusicManager.ListTracks)
 customCommandHooks.registerCommand("reloadtracks", MusicManager.ReloadTracks)

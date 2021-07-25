@@ -1,4 +1,14 @@
-local Helpers = { }
+local Helpers =
+{
+  MusicTypes =
+  {
+    Stop = -1,
+    OnDemand = 0,
+    OnDemandDuringRadio = 1,
+    Radio = 2,
+    Loop = 3
+  }
+}
 
 function Helpers:GetCaseInsensTableKey(tbl, strToFind)
   for key in pairs(tbl) do
@@ -45,9 +55,8 @@ end
 function Helpers:GetRandomTrack()
   local songList = self:GetSortedSongList()
   local randomTrack = songList[math.random(#songList)]
-  local randomTrackData = MusicManager.CachedFiles[randomTrack]
 
-  return randomTrack, randomTrackData
+  return randomTrack
 end
 
 function Helpers:GetSongLength(pid, fileName)
@@ -166,6 +175,49 @@ function Helpers:UpdateCache(pid)
   end
 
   return ret
+end
+
+function OnSongEnd(pid, song)
+  if MusicManager.CurrentSongType == Helpers.MusicTypes.Stop then
+    tes3mp.LogMessage(2, "[MusicManager]: \"OnSongEnd\" called but CurrentSongType was set to stop?")
+    return
+  end
+
+  if MusicManager.CurrentSongType == Helpers.MusicTypes.Radio or MusicManager.CurrentSongType == Helpers.MusicTypes.OnDemandDuringRadio then
+    MusicManager.RadioStart(pid)
+  elseif MusicManager.CurrentSongType == Helpers.MusicTypes.Loop then
+    Helpers:PrintToChat(pid, song, false, true)
+    Helpers:PlayNewSong(pid, song, Helpers.MusicTypes.Loop)
+  end
+end
+
+function Helpers:PlayNewSong(pid, song, playingType)
+  MusicManager.CurrentSongType = playingType
+
+  if playingType == self.MusicTypes.Stop then
+    logicHandler.RunConsoleCommandOnPlayer(pid, "StreamMusic \"\"")
+    return
+  end
+
+  local data = MusicManager.CachedFiles[song]
+
+  if not data then
+    if not song then
+      song = ""
+    end
+
+    tes3mp.LogMessage(3, "[Music Manager]: \"PlayNewSong\" failed when trying to play " .. song)
+    return
+  end
+
+  if not MusicManager.SongTimer then
+    MusicManager.SongTimer = tes3mp.CreateTimerEx("OnSongEnd", data.Length, "is", pid, song)
+    tes3mp.StartTimer(MusicManager.SongTimer)
+  else
+    tes3mp.RestartTimer(MusicManager.SongTimer, data.Length)
+  end
+
+  logicHandler.RunConsoleCommandOnPlayer(pid, string.format("StreamMusic \"%s%s.%s\"", MusicManager.Config.PathToMusicRelative, song, data.Ext))
 end
 
 return Helpers
