@@ -221,21 +221,31 @@ function Helpers:PlayNewSong(pid, song, playingType)
 end
 
 function Helpers:FindCloseTracks(pid, cmd)
-  tableHelper.removeValue(cmd, cmd[1])
+  local requestedTrack = tableHelper.concatenateFromIndex(cmd, 2)
   local trackNames = self:GetSortedSongList()
   local trackMatches = { }
 
   for _, track in pairs(trackNames) do
-    for _, word in pairs(cmd) do
-      if string.find(track:lower(), word:lower(), 1, true) then
+    if string.find(track:lower(), requestedTrack:lower(), 1, true) then
         table.insert(trackMatches, track)
-        break
+    else
+      local trackNoSpaces  = string.gsub(track, " ", "")
+      local searchNoSpaces = string.gsub(requestedTrack, " ", "")
+
+      if string.find(trackNoSpaces:lower(), searchNoSpaces:lower(), 1, true) then
+        table.insert(trackMatches, track)
       end
     end
   end
 
-  local matchStr = "\n- " .. tableHelper.concatenateFromIndex(trackMatches, 1, "\n- ")
-  self:PrintToChat(pid, "Could not find song, did you mean one of these? " .. matchStr)
+  local matches = tableHelper.getCount(trackMatches)
+
+  if matches > 0 then
+    local matchStr = "\n- " .. tableHelper.concatenateFromIndex(trackMatches, 1, "\n- ")
+    self:PrintToChat(pid, string.format("Could not find \"%s\", did you mean one of these?%s %s", requestedTrack, color.GreenText, matchStr), true, _, "\n")
+  else
+    self:PrintToChat(pid, string.format("Could not find \"%s\", alongside any tracks which contained \"%s\".", requestedTrack, requestedTrack), true)
+  end
 end
 
 return Helpers
