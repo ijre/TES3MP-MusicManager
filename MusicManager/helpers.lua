@@ -65,6 +65,11 @@ function Helpers:GetSongLength(pid, fileName)
   local rawStr = io.popen(string.format([[%s\GetFileProps\GetFileProperties.exe "%s%s"]], MusicManager.Config.PathToSelfScripts, MusicManager.Config.PathToMusic, fileName)):read()
   -- format is HH:MM:SS
 
+  if not rawStr then
+    self:PrintToChat(pid, string.format("Failed to open \"%s\", this is most likely due to non-latin letters in the file name.", fileName), true, true)
+    return 0
+  end
+
   local timeSplit = rawStr:split(":")
     -- aw dude timesplitters i love that game
 
