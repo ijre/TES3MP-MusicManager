@@ -8,7 +8,8 @@ MusicManager =
     -- REPLACE "PathToMusic" WITH AN ABSOLUTE PATH TO FOLDER CONTAINING YOUR MUSIC
       -- FOLDER MUST STILL BE LOCATED IN MORROWIND'S "Data Files/Music/"
   },
-  CachedFiles = { }
+  CachedFiles = { },
+  TrackQueue = { }
 }
 
 local function SetupHelpers()
@@ -58,7 +59,7 @@ function MusicManager:PopulateCache(pid, forceUpdate)
   local cache = jsonInterface.load(jsonPath)
 
   if cache then
-    forceUpdate = forceUpdate == true or self.Helpers:ShouldVerifyCache(cache)
+    forceUpdate = type(forceUpdate) == "boolean" and forceUpdate or self.Helpers:ShouldVerifyCache(cache)
   end
 
   if forceUpdate or not cache then
@@ -76,27 +77,17 @@ function MusicManager.PlayTrack(pid, cmd)
     return
   end
 
-  local requestedTrack = tableHelper.concatenateFromIndex(cmd, 2)
-
-  if requestedTrack == "" then
-    MusicManager.ListTracks(pid)
-    return
-  end
-
-  local name = Helpers:GetCaseInsensTableKey(MusicManager.CachedFiles, requestedTrack)
-
-  if not name then
-    Helpers:FindCloseTracks(pid, cmd)
-    return
-  end
-
   local type = Helpers.MusicTypes.OnDemand
 
   if MusicManager.CurrentSongType == Helpers.MusicTypes.Radio then
     type = Helpers.MusicTypes.OnDemandDuringRadio
   end
 
-  Helpers:PlayNewSong(pid, name, type)
+  local name = Helpers:GetSongOnDemand(pid, cmd)
+
+  if name then
+    Helpers:PlayNewSong(pid, name, type)
+  end
 end
 
 function MusicManager.RadioStart(pid)
@@ -114,6 +105,55 @@ function MusicManager.RadioStop(pid)
 
   tes3mp.StopTimer(MusicManager.SongTimer)
   MusicManager.SongTimer = nil
+
+  Helpers:PrintToChat(pid, "Radio stopped.", true, true)
+end
+
+function MusicManager.ResumeQueue(pid)
+  if not MusicManager:PopulateCache(pid) then
+    return
+  end
+
+  if tableHelper.isEmpty(MusicManager.TrackQueue) then
+    return
+  end
+
+  Helpers:PlayNewSong(pid, MusicManager.TrackQueue[1], Helpers.MusicTypes.ResumeQueue)
+
+  Helpers:PrintToChat(pid, "Queue started/resumed!")
+end
+
+function MusicManager.AddToQueue(pid, cmd)
+  if not MusicManager:PopulateCache(pid) then
+    return
+  end
+
+  local song = Helpers:GetSongOnDemand(pid, cmd)
+
+  if not song then
+    return
+  end
+
+  table.insert(MusicManager.TrackQueue, song)
+
+  local autoStart = not string.find(cmd[1], "nostart", 9)
+
+  if autoStart and MusicManager.CurrentSongType == Helpers.MusicTypes.Stop then
+    MusicManager.ResumeQueue(pid)
+  end
+
+  Helpers:PrintToChat(pid, string.format("Track \"%s\" has been added at position %d!", song, tableHelper.getCount(MusicManager.TrackQueue)))
+end
+
+function MusicManager.ViewQueue(pid)
+  local str = "\n"
+
+  for i, track in ipairs(MusicManager.TrackQueue) do
+    str = str .. string.format("- %i: %s\n", i, track)
+  end
+
+  local leng = string.len(str)
+  Helpers:PrintToChat(pid, string.sub(str, 1, leng - 1), _, _, "\n")
 end
 
 local songTypeBeforeLoop = nil
@@ -167,6 +207,11 @@ local cmdList =
   "playtrack",
   "radiostart",
   "radiostop",
+  "queueadd",
+  "queueaddnostart",
+  "queueplay",
+  "queueresume",
+  "queuelist",
   "loop",
   "listtracks",
   "reloadtracks"
@@ -187,8 +232,16 @@ function commandHandler.ProcessCommand(pid, cmd)
 end
 
 customCommandHooks.registerCommand("playtrack", MusicManager.PlayTrack)
+
 customCommandHooks.registerCommand("radiostart", MusicManager.RadioStart)
-customCommandHooks.registerCommand("radiostop", MusicManager.RadioStop)
+customCommandHooks.registerCommand("radiostop",  MusicManager.RadioStop)
+
+customCommandHooks.registerCommand("queueadd",        MusicManager.AddToQueue)
+customCommandHooks.registerCommand("queueaddnostart", MusicManager.AddToQueue)
+customCommandHooks.registerCommand("queueplay",       MusicManager.ResumeQueue)
+customCommandHooks.registerCommand("queueresume",     MusicManager.ResumeQueue)
+customCommandHooks.registerCommand("queuelist",       MusicManager.ViewQueue)
+
 customCommandHooks.registerCommand("loop", MusicManager.Loop)
 customCommandHooks.registerCommand("listtracks", MusicManager.ListTracks)
 customCommandHooks.registerCommand("reloadtracks", MusicManager.ReloadTracks)

@@ -6,7 +6,8 @@ local Helpers =
     OnDemand = 0,
     OnDemandDuringRadio = 1,
     Radio = 2,
-    Loop = 3
+    Loop = 3,
+    ResumeQueue = 4
   }
 }
 
@@ -178,16 +179,26 @@ function Helpers:UpdateCache(pid)
   return ret
 end
 
+function Helpers:ManageQueue()
+  MusicManager.TrackQueue[1] = nil
+  tableHelper.cleanNils(MusicManager.TrackQueue)
+end
+
 function OnSongEnd(pid, song)
   if MusicManager.CurrentSongType == Helpers.MusicTypes.Stop then
     tes3mp.LogMessage(2, "[MusicManager]: \"OnSongEnd\" called but CurrentSongType was set to stop?")
     return
   end
 
-  if MusicManager.CurrentSongType == Helpers.MusicTypes.Radio or MusicManager.CurrentSongType == Helpers.MusicTypes.OnDemandDuringRadio then
-    MusicManager.RadioStart(pid)
-  elseif MusicManager.CurrentSongType == Helpers.MusicTypes.Loop then
+  if MusicManager.CurrentSongType == Helpers.MusicTypes.Loop then
     Helpers:PlayNewSong(pid, song, Helpers.MusicTypes.Loop)
+  elseif not tableHelper.isEmpty(MusicManager.TrackQueue) then
+    Helpers:PlayNewSong(pid, MusicManager.TrackQueue[1], Helpers.MusicTypes.OnDemand)
+    Helpers:ManageQueue()
+  elseif MusicManager.CurrentSongType == Helpers.MusicTypes.Radio or MusicManager.CurrentSongType == Helpers.MusicTypes.OnDemandDuringRadio then
+    MusicManager.RadioStart(pid)
+  else
+    MusicManager.CurrentSongType = Helpers.MusicTypes.Stop
   end
 end
 
@@ -197,6 +208,8 @@ function Helpers:PlayNewSong(pid, song, playingType)
   if playingType == self.MusicTypes.Stop then
     logicHandler.RunConsoleCommandOnPlayer(pid, "StreamMusic \"\"")
     return
+  elseif playingType == self.MusicTypes.ResumeQueue then
+    self:ManageQueue()
   end
 
   local data = MusicManager.CachedFiles[song]
@@ -246,6 +259,24 @@ function Helpers:FindCloseTracks(pid, cmd)
   else
     self:PrintToChat(pid, string.format("Could not find \"%s\", alongside any tracks which contained \"%s\".", requestedTrack, requestedTrack), true)
   end
+end
+
+function Helpers:GetSongOnDemand(pid, cmd)
+  local requestedTrack = tableHelper.concatenateFromIndex(cmd, 2)
+
+  if requestedTrack == "" then
+    MusicManager.ListTracks(pid)
+    return
+  end
+
+  local name = Helpers:GetCaseInsensTableKey(MusicManager.CachedFiles, requestedTrack)
+
+  if not name then
+    Helpers:FindCloseTracks(pid, cmd)
+    return
+  end
+
+  return name
 end
 
 return Helpers
