@@ -23,7 +23,8 @@ function Helpers:GetCaseInsensTableKey(tbl, strToFind)
 end
 
 function Helpers:PrintToChat(pid, msg, isErr, toAll, beforeMsg)
-  local colour = isErr and color.Red or color.GreenText
+  local colour = type(isErr) == "boolean" and isErr and color.Red or color.GreenText
+  toAll = type(toAll) == "boolean" and toAll or false
   beforeMsg = beforeMsg and beforeMsg or ""
 
   tes3mp.SendMessage(pid, string.format("%s%s[MusicManager]: %s\n", beforeMsg, colour, msg), toAll)
@@ -116,7 +117,7 @@ end
 function Helpers:UpdateCache(pid)
   local ret = { }
 
-  self:PrintToChat(pid, "Updating song cache, this may take a while!", false, true, "\n")
+  self:PrintToChat(pid, "Updating song cache, this may take a while!", _, true, "\n")
 
   for file in io.popen(string.format([[dir "%s" /b]], MusicManager.Config.PathToMusic)):lines() do
     local fileSplit = file:split(".")

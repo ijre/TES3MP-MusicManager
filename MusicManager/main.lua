@@ -135,7 +135,7 @@ function MusicManager.Loop(pid)
     state = "disabled"
   end
 
-  Helpers:PrintToChat(pid, string.format("Looping %s!", state), false, true)
+  Helpers:PrintToChat(pid, string.format("Looping %s!", state), _, true)
 end
 
 function MusicManager.ListTracks(pid)
@@ -157,7 +157,7 @@ function MusicManager.ReloadTracks(pid)
 
   Helpers:PrintToChat(pid, string.format(
     "Tracks reloaded!\n%sPlease note: OpenMW only loads its data files between restarts; "
-    .. "this command is only so that the server's list is up to date.", color.Warning), false, true, "\n")
+    .. "this command is only so that the server's list is up to date.", color.Warning), _, true, "\n")
 end
 
 local cmdList =
