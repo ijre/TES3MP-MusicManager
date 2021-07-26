@@ -227,7 +227,7 @@ function Helpers:FindCloseTracks(pid, cmd)
 
   for _, track in pairs(trackNames) do
     if string.find(track:lower(), requestedTrack:lower(), 1, true) then
-        table.insert(trackMatches, track)
+      table.insert(trackMatches, track)
     else
       local trackNoSpaces  = string.gsub(track, " ", "")
       local searchNoSpaces = string.gsub(requestedTrack, " ", "")
