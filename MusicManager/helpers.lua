@@ -186,7 +186,6 @@ function OnSongEnd(pid, song)
   if MusicManager.CurrentSongType == Helpers.MusicTypes.Radio or MusicManager.CurrentSongType == Helpers.MusicTypes.OnDemandDuringRadio then
     MusicManager.RadioStart(pid)
   elseif MusicManager.CurrentSongType == Helpers.MusicTypes.Loop then
-    Helpers:PrintToChat(pid, song, false, true)
     Helpers:PlayNewSong(pid, song, Helpers.MusicTypes.Loop)
   end
 end
