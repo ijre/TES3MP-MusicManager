@@ -111,7 +111,9 @@ end
 
 function MusicManager.RadioStop(pid)
   Helpers:PlayNewSong(pid, _, Helpers.MusicTypes.Stop)
-  MusicManager.RadioTimer = nil
+
+  tes3mp.StopTimer(MusicManager.SongTimer)
+  MusicManager.SongTimer = nil
 end
 
 local songTypeBeforeLoop = nil
